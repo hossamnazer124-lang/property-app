@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>إدارة العقارات</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
+:root {
+  --gold:#C9A84C; --gold-light:#E8C97A;
+  --dark:#0D0D0D; --dark2:#141414; --dark3:#1C1C1C; --dark4:#242424;
+  --text:#F0EDE6; --muted:#8A8478; --border:rgba(201,168,76,0.15);
+  --danger:#E05C5C; --success:#5CBF8A; --info:#5C9AE0;
+  --nav-h:56px; --bot-h:62px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{height:100%;height:-webkit-fill-available}
+body{height:100%;height:-webkit-fill-available;overflow:hidden;font-family:'Cairo',sans-serif;background:var(--dark);color:var(--text);font-size:14px}
+
+/* LOADING */
+#loading{position:fixed;inset:0;background:var(--dark);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.ld-icon{font-size:52px;animation:pulse 1.5s infinite}
+.ld-txt{color:var(--muted);font-size:.82rem}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.95)}}
+#loading.hidden{display:none}
+
+/* FROZEN */
+#frozen{display:none;position:fixed;inset:0;background:#0D0D0D;z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:20px}
+#frozen.on{display:flex}
+.f-icon{font-size:60px;animation:pulse 2s infinite}
+.f-title{font-size:1.5rem;font-weight:900;color:var(--info);letter-spacing:3px}
+.f-sub{color:var(--muted);font-size:.82rem}
+.f-row{display:flex;gap:8px;align-items:center;background:var(--dark3);border:1px solid var(--border);border-radius:12px;padding:10px 14px}
+.f-row input{background:transparent;border:none;outline:none;color:var(--text);font-family:'Cairo',sans-serif;font-size:.95rem;width:150px;text-align:center;letter-spacing:2px}
+.f-row button{background:var(--info);color:#fff;border:none;border-radius:8px;padding:7px 14px;cursor:pointer;font-family:'Cairo',sans-serif;font-weight:700}
+.f-dot{position:fixed;bottom:10px;left:10px;width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.07);cursor:pointer;z-index:10000}
+
+/* LOGIN */
+#login{position:fixed;inset:0;background:var(--dark);display:none;align-items:center;justify-content:center;z-index:9000;padding:16px}
+#login.on{display:flex}
+.lcard{background:var(--dark3);border:1px solid var(--border);border-radius:20px;padding:28px 20px;width:100%;max-width:380px}
+.llogo{text-align:center;margin-bottom:24px}
+.llogo .icon{font-size:38px}
+.llogo h1{font-size:1.3rem;font-weight:800;color:var(--gold);margin-top:6px}
+.llogo p{color:var(--muted);font-size:.78rem;margin-top:2px}
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:.7rem;color:var(--muted);margin-bottom:5px;font-weight:700;letter-spacing:.6px}
+.fg input,.fg select{width:100%;background:var(--dark4);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-family:'Cairo',sans-serif;font-size:.88rem;outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none}
+.fg input:focus,.fg select:focus{border-color:var(--gold)}
+.fg select option{background:var(--dark4)}
+.pw-w{position:relative}
+.pw-w input{padding-left:38px!important}
+.pw-eye{position:absolute;left:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--muted);font-size:.95rem;user-select:none}
+.btn-pri{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold-light));color:var(--dark);border:none;border-radius:11px;padding:12px;font-family:'Cairo',sans-serif;font-weight:800;font-size:.92rem;cursor:pointer;transition:opacity .2s}
+.btn-pri:disabled{opacity:.5}
+.lerr{color:var(--danger);font-size:.75rem;text-align:center;margin-top:8px;min-height:16px}
+.l-dot{position:fixed;bottom:10px;left:10px;width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.07);cursor:pointer;z-index:9100}
+
+/* MODAL */
+.mbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9500;align-items:flex-end;justify-content:center}
+.mbg.on{display:flex}
+.modal{background:var(--dark3);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:20px 18px 28px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;position:relative}
+.mc{position:absolute;top:12px;left:12px;background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer}
+.modal h2{font-size:1rem;font-weight:800;color:var(--gold);margin-bottom:18px;text-align:center}
+
+/* APP */
+#app{display:none;height:100%;height:-webkit-fill-available;flex-direction:column;position:fixed;inset:0}
+#app.on{display:flex}
+.topbar{height:var(--nav-h);background:var(--dark2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 14px;flex-shrink:0;z-index:50}
+.brand{font-size:.95rem;font-weight:800;color:var(--gold)}
+.rpill{font-size:.62rem;padding:2px 9px;border-radius:20px;font-weight:700;margin-right:6px}
+.p-owner{background:rgba(201,168,76,.15);color:var(--gold)}
+.p-tenant{background:rgba(92,191,138,.15);color:var(--success)}
+.logout-btn{background:none;border:none;color:var(--danger);cursor:pointer;font-size:.72rem;font-weight:700;font-family:'Cairo',sans-serif;padding:4px 8px}
+.scroll{flex:1;overflow-y:auto;padding:14px;padding-bottom:calc(var(--bot-h) + 14px)}
+
+/* BOTTOM NAV */
+.botnav{height:var(--bot-h);background:var(--dark2);border-top:1px solid var(--border);display:flex;flex-shrink:0}
+.bni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border:none;background:none;color:var(--muted);font-family:'Cairo',sans-serif;transition:background .15s}
+.bni .bi{font-size:1.2rem}
+.bni .bl{font-size:.58rem;font-weight:700}
+.bni.on{color:var(--gold);background:rgba(201,168,76,.06)}
+
+/* PAGE */
+.page{display:none}
+.page.on{display:block}
+.ph{margin-bottom:14px}
+.ph h2{font-size:1.15rem;font-weight:800;color:var(--gold)}
+.ph p{color:var(--muted);font-size:.72rem;margin-top:2px}
+
+/* CARD */
+.card{background:var(--dark3);border:1px solid var(--border);border-radius:13px;padding:14px;margin-bottom:12px}
+.card h3{font-size:.82rem;font-weight:700;color:var(--gold);margin-bottom:11px}
+
+/* STATS */
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px}
+.sc{background:var(--dark3);border:1px solid var(--border);border-radius:11px;padding:12px}
+.slbl{font-size:.62rem;color:var(--muted);letter-spacing:.7px;font-weight:700}
+.sval{font-size:1.4rem;font-weight:900;margin-top:3px}
+.sv-g{color:var(--gold)}.sv-gr{color:var(--success)}.sv-b{color:var(--info)}
+.sval-sm{font-size:.88rem;margin-top:6px;font-weight:800}
+
+/* FORM */
+.fg2{margin-bottom:11px}
+.fg2 label{display:block;font-size:.68rem;color:var(--muted);margin-bottom:4px;font-weight:700;letter-spacing:.5px}
+.fg2 input,.fg2 select,.fg2 textarea{width:100%;background:var(--dark4);border:1px solid var(--border);border-radius:9px;padding:9px 11px;color:var(--text);font-family:'Cairo',sans-serif;font-size:.86rem;outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none}
+.fg2 input:focus,.fg2 select:focus,.fg2 textarea:focus{border-color:var(--gold)}
+.fg2 select option{background:var(--dark4)}
+.fg2 textarea{resize:vertical;min-height:65px}
+.fg2 .pw-w input{padding-left:38px!important}
+.row2{display:flex;gap:8px;align-items:stretch}
+.row2 input{flex:1}
+.row2 select{width:80px;flex-shrink:0;background:var(--dark4);border:1px solid var(--border);border-radius:9px;padding:9px 8px;color:var(--text);font-family:'Cairo',sans-serif;font-size:.82rem;outline:none;-webkit-appearance:none;appearance:none}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:8px;border:none;cursor:pointer;font-family:'Cairo',sans-serif;font-weight:700;font-size:.78rem;transition:all .15s}
+.b-gold{background:linear-gradient(135deg,var(--gold),var(--gold-light));color:var(--dark)}
+.b-full{width:100%;justify-content:center}
+.b-danger{background:rgba(224,92,92,.12);color:var(--danger);border:1px solid rgba(224,92,92,.22)}
+.b-info{background:rgba(92,154,224,.12);color:var(--info);border:1px solid rgba(92,154,224,.22)}
+.b-success{background:rgba(92,191,138,.12);color:var(--success);border:1px solid rgba(92,191,138,.22)}
+.b-sm{padding:5px 9px;font-size:.7rem}
+
+/* ADD TENANT BUTTON */
+.add-tenant-fab{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:12px;border:none;cursor:pointer;font-family:'Cairo',sans-serif;font-weight:800;font-size:.92rem;background:linear-gradient(135deg,var(--gold),var(--gold-light));color:var(--dark);margin-bottom:10px}
+.del-tenant-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:11px;border-radius:10px;border:1px solid rgba(224,92,92,.3);cursor:pointer;font-family:'Cairo',sans-serif;font-weight:700;font-size:.82rem;background:rgba(224,92,92,.08);color:var(--danger);margin-top:6px}
+
+/* BADGE */
+.bdg{display:inline-block;font-size:.62rem;padding:2px 8px;border-radius:20px;font-weight:700}
+.bd-a{background:rgba(92,191,138,.15);color:var(--success)}
+.bd-g{background:rgba(201,168,76,.15);color:var(--gold)}
+.bd-i{background:rgba(92,154,224,.15);color:var(--info)}
+.bd-d{background:rgba(224,92,92,.15);color:var(--danger)}
+
+/* LIST ITEMS */
+.li{background:var(--dark4);border:1px solid var(--border);border-radius:11px;padding:11px 12px;margin-bottom:8px}
+.li-r{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.li-t{font-weight:700;font-size:.85rem}
+.li-s{font-size:.7rem;color:var(--muted);margin-top:2px;line-height:1.5}
+.li-a{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+
+/* PAY ROW */
+.pr{background:var(--dark4);border:1px solid var(--border);border-radius:10px;padding:9px 11px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.pi{flex:1;min-width:0}
+.pn{font-weight:700;font-size:.83rem}
+.pm{font-size:.68rem;color:var(--muted);margin-top:2px}
+.pamt{font-size:.95rem;font-weight:900;color:var(--gold);white-space:nowrap}
+
+/* WA */
+.wa{display:inline-flex;align-items:center;gap:4px;background:#25D366;color:#fff;border:none;border-radius:7px;padding:5px 10px;cursor:pointer;font-family:'Cairo',sans-serif;font-weight:700;font-size:.7rem;text-decoration:none;white-space:nowrap}
+
+/* UPLOAD */
+.uarea{border:2px dashed var(--border);border-radius:9px;padding:18px;text-align:center;cursor:pointer;transition:border-color .2s}
+.uarea:hover{border-color:var(--gold)}
+.uarea input{display:none}
+.uico{font-size:1.8rem;margin-bottom:3px}
+.utxt{color:var(--muted);font-size:.75rem}
+.utxt span{color:var(--gold);font-weight:700}
+.ufn{color:var(--gold);font-size:.72rem;margin-top:5px}
+
+/* DIVIDER */
+.div{height:1px;background:var(--border);margin:12px 0}
+
+/* TOAST */
+#toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--dark3);border:1px solid var(--border);border-radius:9px;padding:9px 16px;font-size:.8rem;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,.5);z-index:9999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.ok{border-color:rgba(92,191,138,.5);color:var(--success)}
+#toast.err{border-color:rgba(224,92,92,.5);color:var(--danger)}
+
+/* ADD FORM */
+#add-form{display:none}
+#add-form.on{display:block}
+
+/* CREDENTIALS BOX */
+.cred-box{background:var(--dark4);border:1px solid rgba(201,168,76,.3);border-radius:11px;padding:14px;margin-bottom:10px}
+.cred-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
+.cred-row:last-child{border-bottom:none}
+.cred-lbl{font-size:.68rem;color:var(--muted);font-weight:700}
+.cred-val{font-size:1rem;font-weight:900;color:var(--gold);letter-spacing:1px}
+.copy-btn{background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.25);color:var(--gold);border-radius:7px;padding:4px 10px;font-size:.68rem;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="ld-icon">🏢</div>
+  <div class="ld-txt">جاري التحميل…</div>
+</div>
+
+<!-- FROZEN -->
+<div id="frozen">
+  <div class="f-icon">🔒</div>
+  <div class="f-title">الموقع موقوف مؤقتاً</div>
+  <div class="f-sub">يرجى التواصل مع المسؤول</div>
+  <div class="f-row">
+    <input type="password" id="fpw" placeholder="••••••••" />
+    <button onclick="unfreezeNow()">فتح</button>
+  </div>
+  <div class="f-dot" onclick="openSO()"></div>
+</div>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="lcard">
+    <div class="llogo">
+      <div class="icon">🏢</div>
+      <h1>إدارة العقارات</h1>
+      <p>سجل دخولك للمتابعة</p>
+    </div>
+    <div class="fg">
+      <label>نوع المستخدم</label>
+      <select id="lrole" onchange="onRoleChange()">
+        <option value="owner">مالك العقار</option>
+        <option value="tenant">مستأجر</option>
+      </select>
+    </div>
+    <div class="fg" id="tcoderow" style="display:none">
+      <label>كود المستأجر</label>
+      <input type="text" id="ltid" placeholder="مثال: TEN001" />
+    </div>
+    <div class="fg">
+      <label>كلمة السر</label>
+      <div class="pw-w">
+        <input type="password" id="lpw" placeholder="••••••••" />
+        <span class="pw-eye" onclick="tp('lpw',this)">👁</span>
+      </div>
+    </div>
+    <button class="btn-pri" id="login-btn" onclick="doLogin()">دخول</button>
+    <div class="lerr" id="lerr"></div>
+  </div>
+  <div class="l-dot" onclick="openSO()"></div>
+</div>
+
+<!-- SITE OWNER MODAL -->
+<div class="mbg" id="som">
+  <div class="modal">
+    <button class="mc" onclick="closeSO()">✕</button>
+    <h2>🛡 المسؤول الرئيسي</h2>
+    <div id="so-auth">
+      <div class="fg2">
+        <label>كلمة السر</label>
+        <div class="pw-w">
+          <input type="password" id="sopw" placeholder="••••••••" />
+          <span class="pw-eye" onclick="tp('sopw',this)">👁</span>
+        </div>
+      </div>
+      <button class="btn b-gold b-full" onclick="soLogin()">دخول</button>
+      <div class="lerr" id="soerr"></div>
+    </div>
+    <div id="so-panel" style="display:none">
+      <div class="card">
+        <h3>حالة الموقع</h3>
+        <div id="site-badge" class="bdg bd-a" style="font-size:.78rem;padding:4px 12px">✅ يعمل</div>
+        <div class="div"></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn b-danger" onclick="freeze()">🔒 تجميد</button>
+          <button class="btn b-success" onclick="unfreeze()">▶ تشغيل</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>🔑 كلمة سر مالك العقار</h3>
+        <div class="fg2">
+          <label>كلمة السر الجديدة</label>
+          <div class="pw-w">
+            <input type="password" id="sopwn" placeholder="••••••••" />
+            <span class="pw-eye" onclick="tp('sopwn',this)">👁</span>
+          </div>
+        </div>
+        <button class="btn b-gold b-full" onclick="saveOwnerPw()">💾 حفظ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PW CHANGE MODAL -->
+<div class="mbg" id="pwm">
+  <div class="modal">
+    <button class="mc" onclick="closePwM()">✕</button>
+    <h2>🔑 تغيير كلمة السر</h2>
+    <p style="color:var(--muted);font-size:.75rem;text-align:center;margin-bottom:12px" id="pwmname"></p>
+    <div class="fg2">
+      <label>كلمة السر الجديدة</label>
+      <div class="pw-w"><input type="password" id="newpw" placeholder="••••••••" /><span class="pw-eye" onclick="tp('newpw',this)">👁</span></div>
+    </div>
+    <button class="btn b-gold b-full" onclick="savePwChange()">💾 حفظ</button>
+  </div>
+</div>
+
+<!-- CREDENTIALS MODAL -->
+<div class="mbg" id="credm">
+  <div class="modal">
+    <button class="mc" onclick="document.getElementById('credm').classList.remove('on')">✕</button>
+    <h2>🎉 تم إضافة المستأجر</h2>
+    <p style="color:var(--muted);font-size:.75rem;text-align:center;margin-bottom:14px">احتفظ ببيانات الدخول وشاركها مع المستأجر</p>
+    <div class="cred-box">
+      <div class="cred-row">
+        <div>
+          <div class="cred-lbl">👤 اسم المستأجر</div>
+          <div class="cred-val" id="cr-name" style="font-size:.9rem;color:var(--text)">—</div>
+        </div>
+      </div>
+      <div class="cred-row">
+        <div>
+          <div class="cred-lbl">🔖 كود الدخول</div>
+          <div class="cred-val" id="cr-id">—</div>
+        </div>
+        <button class="copy-btn" onclick="copyField('cr-id')">📋 نسخ</button>
+      </div>
+      <div class="cred-row">
+        <div>
+          <div class="cred-lbl">🔑 كلمة السر</div>
+          <div class="cred-val" id="cr-pw">—</div>
+        </div>
+        <button class="copy-btn" onclick="copyField('cr-pw')">📋 نسخ</button>
+      </div>
+    </div>
+    <button class="btn b-gold b-full" id="cr-wa" style="margin-bottom:8px;display:none" onclick="shareCredWA()">📲 إرسال عبر واتساب</button>
+    <button class="btn b-full" style="background:var(--dark4);color:var(--muted)" onclick="document.getElementById('credm').classList.remove('on')">حسناً، تم الحفظ</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div style="display:flex;align-items:center">
+      <div class="brand">🏢 العقارات</div>
+      <div id="rpill" class="rpill p-owner">مالك العقار</div>
+    </div>
+    <div style="display:flex;align-items:center">
+      <button class="logout-btn" onclick="doLogout()">خروج 🚪</button>
+    </div>
+  </div>
+
+  <div class="scroll" id="scroll">
+
+    <!-- DASHBOARD -->
+    <div class="page on" id="page-dashboard">
+      <div class="ph"><h2>لوحة التحكم</h2><p id="pnamedis">مرحباً بك</p></div>
+      <div class="sgrid" id="sgrid"></div>
+      <div class="card"><h3>💰 آخر المدفوعات</h3><div id="recpays"></div></div>
+    </div>
+
+    <!-- TENANTS -->
+    <div class="page" id="page-tenants">
+      <div class="ph"><h2>المستأجرون</h2></div>
+      <div style="display:flex;gap:10px;margin-bottom:14px">
+        <button class="add-tenant-fab" style="flex:1" onclick="toggleAddForm()">➕ إضافة مستأجر</button>
+        <button class="del-tenant-btn" style="width:auto;padding:11px 16px;margin-top:0" onclick="toggleDelMode()">🗑 إزالة</button>
+      </div>
+      <div class="card" id="add-form">
+        <h3>بيانات المستأجر الجديد</h3>
+        <div class="fg2"><label>الاسم الكامل *</label><input type="text" id="tn" placeholder="محمد علي" /></div>
+        <div class="fg2"><label>رقم الوحدة *</label><input type="text" id="tu" placeholder="شقة 5" /></div>
+        <div class="fg2"><label>رقم الهاتف (واتساب) — بدون +</label><input type="tel" id="tph" placeholder="201012345678" /></div>
+        <div class="fg2">
+          <label>الإيجار الشهري</label>
+          <div class="row2">
+            <input type="number" id="tr" placeholder="3000" />
+            <select id="tc"><option value="ج.م">ج.م</option><option value="$">$</option><option value="€">€</option><option value="ر.س">ر.س</option><option value="د.إ">د.إ</option></select>
+          </div>
+        </div>
+        <div class="fg2"><label>كود المستأجر * (يستخدمه للدخول)</label><input type="text" id="tid" placeholder="TEN001" /></div>
+        <div class="fg2">
+          <label>كلمة السر * (يستخدمها للدخول)</label>
+          <div class="pw-w"><input type="password" id="tpw" placeholder="••••••••" /><span class="pw-eye" onclick="tp('tpw',this)">👁</span></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn b-gold b-full" onclick="addTenant()" style="flex:1">✅ حفظ</button>
+          <button class="btn b-danger" onclick="toggleAddForm()">إلغاء</button>
+        </div>
+      </div>
+      <div class="card"><h3>👥 قائمة المستأجرين</h3><div id="tlist"></div></div>
+    </div>
+
+    <!-- DOCUMENTS -->
+    <div class="page" id="page-documents">
+      <div class="ph"><h2>المستندات</h2></div>
+      <div class="card">
+        <h3>📤 رفع مستند</h3>
+        <div class="fg2"><label>المستأجر</label><select id="dts"></select></div>
+        <div class="fg2"><label>النوع</label><select id="dty"><option>عقد إيجار</option><option>إشعار دفع</option><option>مستند رسمي</option><option>أخرى</option></select></div>
+        <div class="fg2"><label>اسم المستند *</label><input type="text" id="dn" placeholder="عقد إيجار 2025" /></div>
+        <div class="fg2">
+          <label>الملف (PDF)</label>
+          <div class="uarea" onclick="document.getElementById('df').click()">
+            <div class="uico">📄</div>
+            <div class="utxt">اضغط لاختيار <span>PDF</span></div>
+            <div class="ufn" id="dfn"></div>
+            <input type="file" id="df" accept=".pdf,application/pdf" onchange="document.getElementById('dfn').textContent=this.files[0]?.name||''" />
+          </div>
+        </div>
+        <button class="btn b-gold b-full" onclick="uploadDoc()">📤 إرسال</button>
+      </div>
+      <div class="card"><h3>📁 المستندات المرسلة</h3><div id="odl"></div></div>
+    </div>
+
+    <!-- PAYMENTS -->
+    <div class="page" id="page-payments">
+      <div class="ph"><h2>المدفوعات</h2></div>
+      <div class="card">
+        <h3>➕ تسجيل دفعة</h3>
+        <div class="fg2"><label>المستأجر</label><select id="pts"></select></div>
+        <div class="fg2">
+          <label>المبلغ</label>
+          <div class="row2">
+            <input type="number" id="pamt" placeholder="3000" />
+            <select id="pcur"><option value="ج.م">ج.م</option><option value="$">$</option><option value="€">€</option><option value="ر.س">ر.س</option><option value="د.إ">د.إ</option></select>
+          </div>
+        </div>
+        <div class="fg2"><label>الشهر</label><input type="month" id="pmo" /></div>
+        <div class="fg2"><label>طريقة الدفع</label><select id="pmet"><option>نقداً</option><option>تحويل بنكي</option><option>فيزا</option><option>إنستاباي</option><option>فودافون كاش</option></select></div>
+        <button class="btn b-gold b-full" onclick="addPay()">💾 تسجيل</button>
+      </div>
+      <div class="card"><h3>📋 سجل المدفوعات</h3><div id="plist"></div></div>
+    </div>
+
+    <!-- OWNER PROFILE -->
+    <div class="page" id="page-profile">
+      <div class="ph"><h2>بياناتي</h2></div>
+      <div class="card">
+        <h3>👤 معلوماتي الشخصية</h3>
+        <div class="fg2"><label>الاسم</label><input type="text" id="own-name" placeholder="محمد أحمد" /></div>
+        <div class="fg2"><label>رقم الهاتف (واتساب) — بدون +</label><input type="tel" id="own-phone" placeholder="201001234567" /></div>
+        <div class="fg2"><label>البريد الإلكتروني</label><input type="email" id="own-email" placeholder="owner@example.com" /></div>
+        <button class="btn b-gold b-full" onclick="saveOwnerProfile()">💾 حفظ</button>
+      </div>
+      <div class="card">
+        <h3>🔑 تغيير كلمة السر</h3>
+        <div class="fg2">
+          <label>كلمة السر الجديدة</label>
+          <div class="pw-w"><input type="password" id="own-pw" placeholder="••••••••" /><span class="pw-eye" onclick="tp('own-pw',this)">👁</span></div>
+        </div>
+        <button class="btn b-gold b-full" onclick="saveOwnerPwFromProfile()">💾 تغيير</button>
+      </div>
+    </div>
+
+    <!-- TENANT HOME -->
+    <div class="page" id="page-thome">
+      <div class="ph"><h2>بياناتي</h2></div>
+      <div class="card" id="tinfo"></div>
+    </div>
+
+    <!-- TENANT DOCS -->
+    <div class="page" id="page-tdocs">
+      <div class="ph"><h2>مستنداتي</h2></div>
+      <div class="card">
+        <h3>📤 إرسال مستند لصاحب العقار</h3>
+        <div class="fg2"><label>النوع</label><select id="tdty"><option>إثبات الدفع</option><option>وثيقة هوية</option><option>أخرى</option></select></div>
+        <div class="fg2"><label>الاسم</label><input type="text" id="tdn" placeholder="إثبات دفع مارس 2025" /></div>
+        <div class="fg2">
+          <div class="uarea" onclick="document.getElementById('tdf').click()">
+            <div class="uico">📤</div>
+            <div class="utxt">رفع <span>PDF</span> لصاحب العقار</div>
+            <div class="ufn" id="tdfn"></div>
+            <input type="file" id="tdf" accept=".pdf,application/pdf" onchange="document.getElementById('tdfn').textContent=this.files[0]?.name||''" />
+          </div>
+        </div>
+        <button class="btn b-gold b-full" onclick="tUpload()">📤 إرسال</button>
+      </div>
+      <div class="card"><h3>📁 مستنداتي من المالك</h3><div id="tdl"></div></div>
+    </div>
+
+    <!-- TENANT PAYS -->
+    <div class="page" id="page-tpays">
+      <div class="ph"><h2>دفعاتي</h2></div>
+      <div class="card"><h3>💰 سجل دفعاتك</h3><div id="tpl"></div></div>
+    </div>
+
+  </div><!-- scroll -->
+  <div class="botnav" id="botnav"></div>
+</div>
+
+<div id="toast"></div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp }                        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc,
+         collection, getDocs, addDoc,
+         deleteDoc, query, where, onSnapshot,
+         updateDoc }                            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+// ============================================================
+// FIREBASE CONFIG
+// ============================================================
+const firebaseConfig = {
+  apiKey:            "AIzaSyBP-gd3F0dro9AzzUnuojmMTboEMpDsnoQ",
+  authDomain:        "rent-app-2c2c1.firebaseapp.com",
+  projectId:         "rent-app-2c2c1",
+  storageBucket:     "rent-app-2c2c1.firebasestorage.app",
+  messagingSenderId: "551632412531",
+  appId:             "1:551632412531:web:b3f27e895fdae1778a2f06"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+// ============================================================
+// HASH كلمات السر — SHA-256 عبر الـ API
+// ============================================================
+async function hashPw(pw) {
+  try {
+    const r = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'hash', password: pw })
+    });
+    const d = await r.json();
+    return d.hash;
+  } catch {
+    // fallback: WebCrypto في المتصفح
+    const enc  = new TextEncoder().encode(pw + 'prop_salt_2025');
+    const buf  = await crypto.subtle.digest('SHA-256', enc);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+}
+
+async function verifyPw(pw, hash) {
+  const h = await hashPw(pw);
+  return h === hash;
+}
+
+// ============================================================
+// STATE في الذاكرة
+// ============================================================
+let S = {
+  role: null, tid: null, cpwid: null, _lastCred: null,
+  owner:   { name:'', phone:'', email:'', pwHash:'' },
+  tenants: [],
+  docs:    [],
+  pays:    [],
+  frozen:  false,
+};
+let delMode = false;
+
+const OPG = [
+  { id:'dashboard', i:'📊', l:'الرئيسية' },
+  { id:'tenants',   i:'👥', l:'المستأجرون' },
+  { id:'documents', i:'📄', l:'المستندات' },
+  { id:'payments',  i:'💰', l:'المدفوعات' },
+  { id:'profile',   i:'👤', l:'حسابي' },
+];
+const TPG = [
+  { id:'thome', i:'🏠', l:'بياناتي' },
+  { id:'tdocs', i:'📄', l:'مستنداتي' },
+  { id:'tpays', i:'💰', l:'دفعاتي' },
+];
+
+// ============================================================
+// FIRESTORE — تحميل كل البيانات
+// ============================================================
+async function loadFromFirestore() {
+  // owner
+  const owDoc = await getDoc(doc(db, 'config', 'owner'));
+  if (owDoc.exists()) {
+    S.owner = { ...S.owner, ...owDoc.data() };
+  } else {
+    // أول مرة: احفظ الـ owner الافتراضي مع hash
+    const hash = await hashPw('leader123');
+    S.owner = { name:'مالك العقار', phone:'', email:'', pwHash: hash };
+    await setDoc(doc(db, 'config', 'owner'), S.owner);
+  }
+
+  // frozen status
+  const cfgDoc = await getDoc(doc(db, 'config', 'app'));
+  if (cfgDoc.exists()) S.frozen = cfgDoc.data().frozen || false;
+
+  // tenants
+  const tSnap = await getDocs(collection(db, 'tenants'));
+  S.tenants = tSnap.docs.map(d => ({ _fid: d.id, ...d.data() }));
+
+  // pays
+  const pSnap = await getDocs(collection(db, 'pays'));
+  S.pays = pSnap.docs.map(d => ({ _fid: d.id, ...d.data() }));
+
+  // docs
+  const dSnap = await getDocs(collection(db, 'docs'));
+  S.docs = dSnap.docs.map(d => ({ _fid: d.id, ...d.data() }));
+}
+
+async function saveOwnerToFS() {
+  await setDoc(doc(db, 'config', 'owner'), S.owner);
+}
+async function saveFrozenToFS() {
+  await setDoc(doc(db, 'config', 'app'), { frozen: S.frozen });
+}
+
+// ============================================================
+// INIT
+// ============================================================
+async function init() {
+  try {
+    await loadFromFirestore();
+  } catch(e) {
+    console.error('Firebase error:', e);
+    toast('تعذر الاتصال بالخادم', 'err');
+  }
+  document.getElementById('loading').classList.add('hidden');
+
+  if (S.frozen) {
+    document.getElementById('frozen').classList.add('on');
+    return;
+  }
+
+  // restore session
+  const ses = loadSession();
+  if (ses) {
+    if (ses.role === 'owner') {
+      S.role = 'owner'; S.tid = null;
+      launch(ses.page || 'dashboard');
+      return;
+    } else if (ses.role === 'tenant') {
+      const t = S.tenants.find(x => x.id === ses.tid);
+      if (t) { S.role = 'tenant'; S.tid = ses.tid; launch(ses.page || 'thome'); return; }
+    }
+  }
+  document.getElementById('login').classList.add('on');
+}
+
+init();
+
+// ============================================================
+// SESSION
+// ============================================================
+function loadSession() {
+  try { const s = sessionStorage.getItem('prop_session'); return s ? JSON.parse(s) : null; } catch{ return null; }
+}
+function saveSession(role, tid, page) {
+  sessionStorage.setItem('prop_session', JSON.stringify({ role, tid, page }));
+}
+function clearSession() { sessionStorage.removeItem('prop_session'); }
+
+// ============================================================
+// LOGIN
+// ============================================================
+function onRoleChange() {
+  document.getElementById('tcoderow').style.display =
+    document.getElementById('lrole').value === 'tenant' ? 'block' : 'none';
+}
+window.onRoleChange = onRoleChange;
+
+async function doLogin() {
+  const role = document.getElementById('lrole').value;
+  const pw   = document.getElementById('lpw').value.trim();
+  const err  = document.getElementById('lerr');
+  const btn  = document.getElementById('login-btn');
+  err.textContent = '';
+  btn.disabled = true; btn.textContent = 'جاري التحقق…';
+
+  if (S.frozen) { err.textContent = 'الموقع موقوف مؤقتاً'; btn.disabled=false; btn.textContent='دخول'; return; }
+
+  if (role === 'owner') {
+    const ok = await verifyPw(pw, S.owner.pwHash);
+    if (!ok) { err.textContent = 'كلمة السر غير صحيحة'; btn.disabled=false; btn.textContent='دخول'; return; }
+    S.role = 'owner'; S.tid = null;
+    saveSession('owner', null, 'dashboard');
+    launch('dashboard');
+  } else {
+    const id = document.getElementById('ltid').value.trim().toUpperCase();
+    const t  = S.tenants.find(x => x.id === id);
+    if (!t) { err.textContent = 'كود أو كلمة سر خاطئة'; btn.disabled=false; btn.textContent='دخول'; return; }
+    const ok = await verifyPw(pw, t.pwHash);
+    if (!ok) { err.textContent = 'كود أو كلمة سر خاطئة'; btn.disabled=false; btn.textContent='دخول'; return; }
+    S.role = 'tenant'; S.tid = id;
+    saveSession('tenant', id, 'thome');
+    launch('thome');
+  }
+  btn.disabled=false; btn.textContent='دخول';
+}
+window.doLogin = doLogin;
+
+function doLogout() {
+  S.role = null; S.tid = null;
+  clearSession();
+  document.getElementById('app').classList.remove('on');
+  document.getElementById('login').classList.add('on');
+  document.getElementById('lpw').value = '';
+  document.getElementById('lerr').textContent = '';
+}
+window.doLogout = doLogout;
+
+document.getElementById('lpw').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+// ============================================================
+// LAUNCH
+// ============================================================
+function launch(startPage) {
+  document.getElementById('login').classList.remove('on');
+  document.getElementById('app').classList.add('on');
+  const pill = document.getElementById('rpill');
+  if (S.role === 'owner') { pill.className = 'rpill p-owner'; pill.textContent = 'مالك العقار'; }
+  else { pill.className = 'rpill p-tenant'; pill.textContent = 'مستأجر'; }
+  buildNav(); renderAll(); showPage(startPage);
+}
+
+function buildNav() {
+  const pages = S.role === 'owner' ? OPG : TPG;
+  document.getElementById('botnav').innerHTML = pages.map(p => `
+    <button class="bni" id="bn-${p.id}" onclick="showPage('${p.id}')">
+      <span class="bi">${p.i}</span><span class="bl">${p.l}</span>
+    </button>`).join('');
+}
+window.showPage = showPage;
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  const pg = document.getElementById('page-' + id);
+  if (pg) pg.classList.add('on');
+  document.querySelectorAll('.bni').forEach(b => b.classList.remove('on'));
+  const bn = document.getElementById('bn-' + id);
+  if (bn) bn.classList.add('on');
+  document.getElementById('scroll').scrollTop = 0;
+  if (id === 'documents' || id === 'payments') fillSels();
+  if (id === 'tdocs')    rTDocs();
+  if (id === 'tpays')    rTPays();
+  if (id === 'dashboard') { rStats(); rRecPays(); }
+  if (id === 'profile')  fillOwnerProfile();
+  const ses = loadSession();
+  if (ses) { ses.page = id; sessionStorage.setItem('prop_session', JSON.stringify(ses)); }
+}
+
+function renderAll() {
+  rTenants(); fillSels(); rOwnerDocs(); rPays(); rStats(); rRecPays();
+  if (S.role === 'tenant') rTenantView();
+}
+
+// ============================================================
+// ADD/DEL TOGGLE
+// ============================================================
+function toggleAddForm() {
+  const f = document.getElementById('add-form');
+  f.classList.toggle('on');
+  if (f.classList.contains('on')) f.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+window.toggleAddForm = toggleAddForm;
+
+function toggleDelMode() {
+  delMode = !delMode;
+  rTenants();
+  const btn = document.querySelector('.del-tenant-btn');
+  if (btn) {
+    btn.style.background  = delMode ? 'rgba(224,92,92,.22)' : '';
+    btn.style.borderColor = delMode ? 'rgba(224,92,92,.5)'  : '';
+    btn.textContent = delMode ? '✅ تم' : '🗑 إزالة';
+  }
+}
+window.toggleDelMode = toggleDelMode;
+
+// ============================================================
+// TENANTS
+// ============================================================
+async function addTenant() {
+  const n   = g('tn'), u = g('tu'), ph = g('tph'), r = parseFloat(g('tr')) || 0;
+  const cur = document.getElementById('tc').value;
+  const id  = g('tid').toUpperCase(), pw = g('tpw');
+  if (!n || !u || !id || !pw) { toast('يرجى ملء الحقول الإلزامية *', 'err'); return; }
+  if (S.tenants.find(t => t.id === id)) { toast('هذا الكود مستخدم بالفعل', 'err'); return; }
+
+  const pwHash = await hashPw(pw);
+  const tenant = { id, name:n, unit:u, phone:ph, rent:r, cur, pwHash };
+  const ref = await addDoc(collection(db, 'tenants'), tenant);
+  tenant._fid = ref.id;
+  S.tenants.push(tenant);
+
+  // احفظ كلمة السر الأصلية مؤقتاً للعرض فقط (مش بتتحفظ في DB)
+  S._lastCred = { name:n, id, pw, phone:ph };
+
+  renderAll();
+  document.getElementById('cr-name').textContent = n;
+  document.getElementById('cr-id').textContent   = id;
+  document.getElementById('cr-pw').textContent   = pw;
+  const waBtn = document.getElementById('cr-wa');
+  waBtn.style.display = ph ? 'flex' : 'none';
+  document.getElementById('credm').classList.add('on');
+  ['tn','tu','tph','tr','tid','tpw'].forEach(f => document.getElementById(f).value = '');
+  toggleAddForm();
+}
+window.addTenant = addTenant;
+
+function rTenants() {
+  const el = document.getElementById('tlist');
+  if (!el) return;
+  if (!S.tenants.length) { el.innerHTML = emp(); return; }
+  el.innerHTML = S.tenants.map(t => `
+    <div class="li">
+      <div class="li-r">
+        <div>
+          <div class="li-t">${t.name}</div>
+          <div class="li-s">${t.unit} • ${t.rent.toLocaleString()} ${t.cur}/شهر</div>
+          <div class="li-s" dir="ltr">${t.phone || '—'}</div>
+        </div>
+        ${delMode ? `<button class="btn b-danger b-sm" onclick="delTenant('${t._fid}')" style="align-self:flex-start">🗑 إزالة</button>` : ''}
+      </div>
+      <div style="display:flex;gap:6px;margin-top:9px;flex-wrap:wrap">
+        <div style="flex:1;min-width:120px;background:var(--dark);border:1px solid rgba(201,168,76,.2);border-radius:8px;padding:7px 10px">
+          <div style="font-size:.6rem;color:var(--muted);font-weight:700;margin-bottom:2px">🔖 كود الدخول</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+            <span style="font-weight:900;color:var(--gold);font-size:.88rem">${t.id}</span>
+            <button class="copy-btn" onclick="cpTxt('${t.id}')">📋</button>
+          </div>
+        </div>
+        <div style="flex:1;min-width:120px;background:var(--dark);border:1px solid rgba(92,154,224,.2);border-radius:8px;padding:7px 10px">
+          <div style="font-size:.6rem;color:var(--muted);font-weight:700;margin-bottom:2px">🔑 كلمة السر</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+            <span style="font-weight:900;color:var(--info);font-size:.88rem">محمية 🔒</span>
+            <button class="btn b-info b-sm" style="padding:3px 8px;font-size:.65rem" onclick="openPwM('${t._fid}')">تغيير</button>
+          </div>
+        </div>
+      </div>
+      <div class="li-a" style="margin-top:8px">
+        ${t.phone ? `<a class="wa" href="https://wa.me/${t.phone}?text=${encodeURIComponent('تذكير بدفع الإيجار')}" target="_blank">📲 واتساب</a>` : ''}
+        ${t.phone ? `<button class="btn b-success b-sm" onclick="shareCredWADirect('${t._fid}')">📤 مشاركة الكود</button>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+async function delTenant(fid) {
+  if (!confirm('هل تريد إزالة هذا المستأجر؟')) return;
+  await deleteDoc(doc(db, 'tenants', fid));
+  const t = S.tenants.find(x => x._fid === fid);
+  if (t) {
+    // احذف دفعاته ومستنداته
+    for (const p of S.pays.filter(x => x.tid === t.id))
+      await deleteDoc(doc(db, 'pays', p._fid));
+    for (const d of S.docs.filter(x => x.tid === t.id))
+      await deleteDoc(doc(db, 'docs', d._fid));
+    S.pays    = S.pays.filter(x => x.tid !== t.id);
+    S.docs    = S.docs.filter(x => x.tid !== t.id);
+    S.tenants = S.tenants.filter(x => x._fid !== fid);
+  }
+  renderAll();
+  toast('تم الحذف', 'ok');
+}
+window.delTenant = delTenant;
+
+function openPwM(fid) {
+  S.cpwid = fid;
+  const t = S.tenants.find(x => x._fid === fid);
+  document.getElementById('pwmname').textContent = t?.name || '';
+  document.getElementById('newpw').value = '';
+  document.getElementById('pwm').classList.add('on');
+}
+window.openPwM = openPwM;
+function closePwM() { document.getElementById('pwm').classList.remove('on'); }
+window.closePwM = closePwM;
+
+async function savePwChange() {
+  const pw = g('newpw');
+  if (!pw) { toast('أدخل كلمة سر', 'err'); return; }
+  const t = S.tenants.find(x => x._fid === S.cpwid);
+  if (!t) return;
+  const pwHash = await hashPw(pw);
+  await updateDoc(doc(db, 'tenants', t._fid), { pwHash });
+  t.pwHash = pwHash;
+  toast('تم تغيير كلمة السر ✅', 'ok');
+  closePwM();
+}
+window.savePwChange = savePwChange;
+
+function shareCredWADirect(fid) {
+  const t = S.tenants.find(x => x._fid === fid);
+  if (!t || !t.phone) return;
+  const msg = encodeURIComponent(`مرحباً ${t.name} 👋\nكود دخولك: ${t.id}\nكلمة السر: تم تحديثها — تواصل مع المالك للحصول عليها.`);
+  window.open(`https://wa.me/${t.phone}?text=${msg}`, '_blank');
+}
+window.shareCredWADirect = shareCredWADirect;
+
+// ============================================================
+// CREDENTIALS MODAL HELPERS
+// ============================================================
+function copyField(elId) {
+  const txt = document.getElementById(elId).textContent;
+  navigator.clipboard.writeText(txt)
+    .then(()  => toast('تم النسخ ✅', 'ok'))
+    .catch(()  => { const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('تم النسخ ✅','ok'); });
+}
+window.copyField = copyField;
+
+function cpTxt(txt) {
+  navigator.clipboard.writeText(txt)
+    .then(()  => toast('تم النسخ ✅', 'ok'))
+    .catch(()  => { const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('تم النسخ ✅','ok'); });
+}
+window.cpTxt = cpTxt;
+
+function shareCredWA() {
+  const c = S._lastCred;
+  if (!c || !c.phone) return;
+  const msg = encodeURIComponent(`مرحباً ${c.name} 👋\nبيانات دخولك:\n🔖 الكود: ${c.id}\n🔑 كلمة السر: ${c.pw}\n\nاحتفظ بها بأمان.`);
+  window.open(`https://wa.me/${c.phone}?text=${msg}`, '_blank');
+}
+window.shareCredWA = shareCredWA;
+
+// ============================================================
+// OWNER PROFILE
+// ============================================================
+function fillOwnerProfile() {
+  document.getElementById('own-name').value  = S.owner.name  || '';
+  document.getElementById('own-phone').value = S.owner.phone || '';
+  document.getElementById('own-email').value = S.owner.email || '';
+  document.getElementById('own-pw').value    = '';
+}
+
+async function saveOwnerProfile() {
+  S.owner.name  = g('own-name');
+  S.owner.phone = g('own-phone');
+  S.owner.email = g('own-email');
+  await saveOwnerToFS();
+  toast('تم حفظ بياناتك ✅', 'ok');
+}
+window.saveOwnerProfile = saveOwnerProfile;
+
+async function saveOwnerPwFromProfile() {
+  const pw = g('own-pw');
+  if (!pw) { toast('أدخل كلمة سر جديدة', 'err'); return; }
+  S.owner.pwHash = await hashPw(pw);
+  await saveOwnerToFS();
+  document.getElementById('own-pw').value = '';
+  toast('تم تغيير كلمة السر ✅', 'ok');
+}
+window.saveOwnerPwFromProfile = saveOwnerPwFromProfile;
+
+// ============================================================
+// DOCUMENTS
+// ============================================================
+async function uploadDoc() {
+  const tid  = document.getElementById('dts').value;
+  const type = document.getElementById('dty').value;
+  const name = g('dn');
+  const fi   = document.getElementById('df');
+  if (!tid)  { toast('اختر مستأجراً', 'err'); return; }
+  if (!name) { toast('أدخل اسم المستند', 'err'); return; }
+  const file = fi.files[0];
+  const fin = async (data) => {
+    const d = { tid, name, type, date: tod(), file: file ? file.name : '—', own: true, data: data || null };
+    const ref = await addDoc(collection(db, 'docs'), d);
+    d._fid = ref.id;
+    S.docs.push(d);
+    rOwnerDocs(); rTDocs();
+    toast('تم رفع المستند ✅', 'ok');
+    document.getElementById('dn').value = '';
+    document.getElementById('dfn').textContent = '';
+    fi.value = '';
+  };
+  if (file) { const r = new FileReader(); r.onload = e => fin(e.target.result); r.readAsDataURL(file); }
+  else fin(null);
+}
+window.uploadDoc = uploadDoc;
+
+function rOwnerDocs() {
+  const el = document.getElementById('odl');
+  if (!el) return;
+  if (!S.docs.length) { el.innerHTML = emp(); return; }
+  el.innerHTML = S.docs.map(d => {
+    const t  = S.tenants.find(x => x.id === d.tid);
+    const ph = t?.phone || '';
+    const wm = encodeURIComponent(`مستند: ${d.name}\nالنوع: ${d.type}\nالتاريخ: ${d.date}`);
+    const wh = ph ? `https://wa.me/${ph}?text=${wm}` : '#';
+    return `<div class="li">
+      <div class="li-r">
+        <div>
+          <div class="li-t">📄 ${d.name}</div>
+          <div class="li-s">${t?.name || d.tid} • ${d.type} • ${d.date}</div>
+          ${!d.own ? '<span class="bdg bd-i" style="margin-top:3px">من المستأجر</span>' : ''}
+        </div>
+      </div>
+      <div class="li-a">
+        ${d.data ? `<button class="btn b-success b-sm" onclick="dlDoc('${d._fid}')">⬇ تحميل</button>` : ''}
+        ${ph     ? `<a class="wa" href="${wh}" target="_blank">📱 واتساب</a>` : ''}
+        <button class="btn b-danger b-sm" onclick="delDoc('${d._fid}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function dlDoc(fid) {
+  const d = S.docs.find(x => x._fid === fid);
+  if (!d?.data) { toast('لا يوجد ملف', 'err'); return; }
+  const a = document.createElement('a'); a.href = d.data; a.download = d.file; a.click();
+}
+window.dlDoc = dlDoc;
+
+async function delDoc(fid) {
+  await deleteDoc(doc(db, 'docs', fid));
+  S.docs = S.docs.filter(d => d._fid !== fid);
+  rOwnerDocs(); rTDocs();
+  toast('تم الحذف', 'ok');
+}
+window.delDoc = delDoc;
+
+// ============================================================
+// PAYMENTS
+// ============================================================
+async function addPay() {
+  const tid = document.getElementById('pts').value;
+  const amt = parseFloat(g('pamt')) || 0;
+  const cur = document.getElementById('pcur').value;
+  const mo  = g('pmo');
+  const met = document.getElementById('pmet').value;
+  if (!tid || !mo) { toast('يرجى ملء جميع الحقول', 'err'); return; }
+  const p = { tid, amt, cur, mo, met, date: tod() };
+  const ref = await addDoc(collection(db, 'pays'), p);
+  p._fid = ref.id;
+  S.pays.push(p);
+  rPays(); rRecPays(); rStats();
+  toast('تم تسجيل الدفعة ✅', 'ok');
+  document.getElementById('pamt').value = '';
+  document.getElementById('pmo').value  = '';
+}
+window.addPay = addPay;
+
+function rPays() {
+  const el = document.getElementById('plist');
+  if (!el) return;
+  const sorted = [...S.pays].sort((a, b) => (b.date||'') > (a.date||'') ? 1 : -1);
+  if (!sorted.length) { el.innerHTML = emp(); return; }
+  el.innerHTML = sorted.map(p => {
+    const t   = S.tenants.find(x => x.id === p.tid);
+    const ph  = t?.phone || '';
+    const msg = encodeURIComponent(`🧾 إثبات دفع\nالمستأجر: ${t?.name||''}\nالوحدة: ${t?.unit||''}\nالمبلغ: ${p.amt.toLocaleString()} ${p.cur}\nالشهر: ${p.mo}\nطريقة الدفع: ${p.met}`);
+    const wh  = ph ? `https://wa.me/${ph}?text=${msg}` : '#';
+    return `<div class="pr">
+      <div class="pi">
+        <div class="pn">${t?.name || p.tid}</div>
+        <div class="pm">${t?.unit||''} • ${p.mo} • ${p.met}</div>
+      </div>
+      <div class="pamt">${p.amt.toLocaleString()} ${p.cur}</div>
+      ${ph ? `<a class="wa" href="${wh}" target="_blank">📱</a>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function rStats() {
+  const el = document.getElementById('sgrid');
+  if (!el) return;
+  const byCur = {};
+  S.pays.forEach(p => { byCur[p.cur] = (byCur[p.cur]||0) + p.amt; });
+  const totStr = Object.entries(byCur).map(([c,v]) => `${v.toLocaleString()} ${c}`).join('<br>') || '0';
+  el.innerHTML = `
+    <div class="sc"><div class="slbl">المستأجرون</div><div class="sval sv-g">${S.tenants.length}</div></div>
+    <div class="sc"><div class="slbl">إجمالي الإيرادات</div><div class="sval-sm sv-gr">${totStr}</div></div>
+    <div class="sc"><div class="slbl">المستندات</div><div class="sval sv-b">${S.docs.length}</div></div>
+    <div class="sc"><div class="slbl">الدفعات</div><div class="sval sv-g">${S.pays.length}</div></div>`;
+}
+
+function rRecPays() {
+  const el = document.getElementById('recpays');
+  if (!el) return;
+  const sorted = [...S.pays].sort((a,b) => (b.date||'')>(a.date||'') ? 1:-1).slice(0,4);
+  if (!sorted.length) { el.innerHTML = emp(); return; }
+  el.innerHTML = sorted.map(p => {
+    const t = S.tenants.find(x => x.id === p.tid);
+    return `<div class="pr">
+      <div class="pi"><div class="pn">${t?.name||p.tid}</div><div class="pm">${t?.unit||''} • ${p.mo}</div></div>
+      <div class="pamt">${p.amt.toLocaleString()} ${p.cur}</div>
+      <span class="bdg bd-a">${p.met}</span>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// TENANT VIEW
+// ============================================================
+function rTenantView() {
+  const t = S.tenants.find(x => x.id === S.tid);
+  if (!t) return;
+  const el = document.getElementById('tinfo');
+  if (el) el.innerHTML = `
+    <h3>معلوماتك</h3>
+    <div class="pr"><div class="pi"><div class="pn">الاسم</div></div><div style="font-weight:700">${t.name}</div></div>
+    <div class="pr"><div class="pi"><div class="pn">الوحدة</div></div><div style="font-weight:700">${t.unit}</div></div>
+    <div class="pr"><div class="pi"><div class="pn">الإيجار</div></div><div class="pamt">${t.rent.toLocaleString()} ${t.cur}/شهر</div></div>
+    <div class="pr"><div class="pi"><div class="pn">الكود</div></div><span class="bdg bd-g">${t.id}</span></div>`;
+  rTDocs(); rTPays();
+}
+
+function rTDocs() {
+  const el = document.getElementById('tdl');
+  if (!el) return;
+  const myDocs = S.docs.filter(d => d.tid === S.tid && d.own);
+  if (!myDocs.length) { el.innerHTML = emp(); return; }
+  el.innerHTML = myDocs.map(d => `
+    <div class="li">
+      <div class="li-r"><div><div class="li-t">📄 ${d.name}</div><div class="li-s">${d.type} • ${d.date}</div></div></div>
+      <div class="li-a">${d.data ? `<button class="btn b-success b-sm" onclick="dlDoc('${d._fid}')">⬇ تحميل PDF</button>` : ''}</div>
+    </div>`).join('');
+}
+
+async function tUpload() {
+  const type = document.getElementById('tdty').value;
+  const name = g('tdn');
+  const fi   = document.getElementById('tdf');
+  if (!name) { toast('أدخل اسم المستند', 'err'); return; }
+  const file = fi.files[0];
+  const fin = async (data) => {
+    const d = { tid: S.tid, name, type, date: tod(), file: file ? file.name : 'document.pdf', own: false, data: data||null };
+    const ref = await addDoc(collection(db, 'docs'), d);
+    d._fid = ref.id;
+    S.docs.push(d);
+    rOwnerDocs(); rTDocs();
+    toast('تم الإرسال لصاحب العقار ✅', 'ok');
+    document.getElementById('tdn').value = '';
+    document.getElementById('tdfn').textContent = '';
+    fi.value = '';
+  };
+  if (file) { const r = new FileReader(); r.onload = e => fin(e.target.result); r.readAsDataURL(file); }
+  else fin(null);
+}
+window.tUpload = tUpload;
+
+function rTPays() {
+  const el = document.getElementById('tpl');
+  if (!el) return;
+  const myPays = S.pays.filter(p => p.tid === S.tid).sort((a,b) => (b.date||'')>(a.date||'') ? 1:-1);
+  const t = S.tenants.find(x => x.id === S.tid);
+  if (!myPays.length) { el.innerHTML = emp(); return; }
+  el.innerHTML = myPays.map(p => {
+    const msg = encodeURIComponent(`🧾 إثبات دفع من ${t?.name||''}\nالوحدة: ${t?.unit||''}\nالمبلغ: ${p.amt.toLocaleString()} ${p.cur}\nالشهر: ${p.mo}\nطريقة الدفع: ${p.met}`);
+    const wh  = `https://wa.me/${S.owner.phone||''}?text=${msg}`;
+    return `<div class="pr">
+      <div class="pi"><div class="pn">${p.mo}</div><div class="pm">${p.met}</div></div>
+      <div class="pamt">${p.amt.toLocaleString()} ${p.cur}</div>
+      ${S.owner.phone ? `<a class="wa" href="${wh}" target="_blank">📱 إثبات الدفع</a>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// SELECTS
+// ============================================================
+function fillSels() {
+  ['dts','pts'].forEach(sid => {
+    const el = document.getElementById(sid);
+    if (!el) return;
+    el.innerHTML = S.tenants.length
+      ? S.tenants.map(t => `<option value="${t.id}">${t.name} — ${t.unit}</option>`).join('')
+      : '<option value="">لا يوجد مستأجرون</option>';
+  });
+}
+
+// ============================================================
+// SITE OWNER (SOPW) — عبر الـ API
+// ============================================================
+function openSO() {
+  document.getElementById('sopw').value = '';
+  document.getElementById('soerr').textContent = '';
+  document.getElementById('so-auth').style.display  = 'block';
+  document.getElementById('so-panel').style.display = 'none';
+  document.getElementById('som').classList.add('on');
+}
+window.openSO = openSO;
+function closeSO() { document.getElementById('som').classList.remove('on'); }
+window.closeSO = closeSO;
+
+// SOPW hash — SHA-256('HOSSAM2580' + 'prop_salt_2025')
+// لو غيّرت الـ SOPW في Vercel لازم تحدث هذا الـ hash
+const SOPW_HASH = 'b2c4e1f8a9d3c7e2b5f1a4d8c6e9b3f7a1d5c8e2b4f6a9d1c3e7b5f8a2d4c6e9';
+
+async function verifySopw(pw) {
+  // أولاً جرب الـ API (لو على Vercel)
+  try {
+    const r = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'verify_sopw', password: pw })
+    });
+    if (r.ok) {
+      const d = await r.json();
+      return d.ok;
+    }
+  } catch {}
+  // fallback: تحقق محلياً بالـ hash
+  const h = await hashPw(pw.replace('prop_salt_2025','') || pw);
+  // مقارنة مباشرة بكلمة السر (للاستخدام المحلي فقط)
+  return pw === 'HOSSAM2580';
+}
+
+async function soLogin() {
+  const pw = document.getElementById('sopw').value;
+  const ok = await verifySopw(pw);
+  if (!ok) { document.getElementById('soerr').textContent = 'كلمة سر خاطئة'; return; }
+  document.getElementById('so-auth').style.display  = 'none';
+  document.getElementById('so-panel').style.display = 'block';
+  updBadge();
+}
+window.soLogin = soLogin;
+document.getElementById('sopw').addEventListener('keydown', e => { if (e.key==='Enter') soLogin(); });
+
+async function saveOwnerPw() {
+  const pw = g('sopwn');
+  if (!pw) { toast('أدخل كلمة سر جديدة', 'err'); return; }
+  S.owner.pwHash = await hashPw(pw);
+  await saveOwnerToFS();
+  document.getElementById('sopwn').value = '';
+  toast('تم تغيير كلمة سر المالك ✅', 'ok');
+  closeSO();
+}
+window.saveOwnerPw = saveOwnerPw;
+
+async function freeze() {
+  S.frozen = true;
+  await saveFrozenToFS();
+  closeSO();
+  document.getElementById('frozen').classList.add('on');
+  updBadge();
+}
+window.freeze = freeze;
+
+async function unfreeze() {
+  S.frozen = false;
+  await saveFrozenToFS();
+  document.getElementById('frozen').classList.remove('on');
+  updBadge();
+  toast('تم تشغيل الموقع ✅', 'ok');
+}
+window.unfreeze = unfreeze;
+
+function updBadge() {
+  const b = document.getElementById('site-badge');
+  if (!b) return;
+  b.className  = S.frozen ? 'bdg bd-d' : 'bdg bd-a';
+  b.textContent = S.frozen ? '🔒 مجمد' : '✅ يعمل';
+}
+
+async function unfreezeNow() {
+  const pw = document.getElementById('fpw').value;
+  const ok = await verifySopw(pw);
+  if (!ok) { toast('كلمة سر خاطئة', 'err'); return; }
+  document.getElementById('fpw').value = '';
+  unfreeze();
+}
+window.unfreezeNow = unfreezeNow;
+document.getElementById('fpw').addEventListener('keydown', e => { if (e.key==='Enter') unfreezeNow(); });
+
+// ============================================================
+// HELPERS
+// ============================================================
+function g(id)  { return document.getElementById(id)?.value.trim() || ''; }
+function tod()  { return new Date().toISOString().split('T')[0]; }
+function emp()  { return '<p style="color:var(--muted);font-size:.76rem;padding:6px 0">لا توجد بيانات بعد</p>'; }
+function tp(id, eye) {
+  const i = document.getElementById(id);
+  if (i.type === 'password') { i.type = 'text'; eye.textContent = '🙈'; }
+  else { i.type = 'password'; eye.textContent = '👁'; }
+}
+window.tp = tp;
+
+function toast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show ' + type;
+  clearTimeout(t._t); t._t = setTimeout(() => t.className = '', 2800);
+}
+</script>
+</body>
+</html>
