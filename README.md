@@ -1,2 +1,0 @@
-# property-app
-property-app
